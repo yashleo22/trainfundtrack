@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Train Fund Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ================= LOGIN ================= -->
+  <div id="login-screen" class="login-screen">
+    <form id="login-form" class="login-card" autocomplete="off">
+      <div class="login-brand">
+        <span class="login-mark">🚆</span>
+        <h1>Train Fund Tracker</h1>
+        <p class="muted">Sign in to continue</p>
+      </div>
+      <label class="field">
+        <span>Username</span>
+        <input id="login-user" type="text" autocomplete="username" required />
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input id="login-pass" type="password" autocomplete="current-password" required />
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+      <p id="login-error" class="login-error" hidden>Invalid username or password.</p>
+      <p class="login-hint muted">Mohit can view &amp; edit the “Received Mohit” column · Admin can edit everything</p>
+    </form>
+  </div>
+
+  <!-- ================= APP ================= -->
+  <div id="app" class="app" hidden>
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="brand-mark">🚆</span>
+        <strong>Train Fund Tracker</strong>
+      </div>
+      <div class="topbar-right">
+        <span class="today">As of <span id="today-label"></span></span>
+        <span id="role-badge" class="badge"></span>
+        <span id="save-status" class="save-status" hidden></span>
+        <button id="btn-save" class="btn btn-primary" hidden>Save</button>
+        <button id="btn-backup" class="btn btn-ghost" hidden>Backup</button>
+        <button id="btn-logout" class="btn btn-ghost">Logout</button>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="controls-row">
+        <div class="ctrl">
+          <label>From</label>
+          <input type="date" id="global-from" />
+        </div>
+        <div class="ctrl">
+          <label>To</label>
+          <input type="date" id="global-to" />
+        </div>
+        <div class="presets" id="global-presets">
+          <button class="chip" data-preset="all">All time</button>
+          <button class="chip" data-preset="30">Last 30d</button>
+          <button class="chip" data-preset="90">Last 90d</button>
+          <button class="chip" data-preset="mtd">Month to date</button>
+        </div>
+        <button id="btn-clear-range" class="btn btn-ghost btn-sm">Clear</button>
+      </div>
+      <div class="controls-row">
+        <div class="train-filter" id="train-filter"></div>
+        <div class="spacer"></div>
+        <button id="btn-add-train" class="btn btn-primary btn-sm" hidden>+ Add train</button>
+        <button id="btn-expand-all" class="btn btn-ghost btn-sm">Expand all</button>
+        <button id="btn-collapse-all" class="btn btn-ghost btn-sm">Collapse all</button>
+      </div>
+      <p class="range-note muted" id="range-note"></p>
+    </div>
+
+    <main id="train-list" class="train-list"></main>
+
+    <section id="cumulative" class="cumulative"></section>
+
+    <footer class="footer">
+      <span class="muted">Data last updated <span id="data-updated"></span></span>
+      <span id="dirty-flag" class="dirty-flag" hidden>● Unsaved changes</span>
+    </footer>
+  </div>
+
+  <!-- ================= ENTRY MODAL ================= -->
+  <div id="entry-modal" class="modal" hidden>
+    <div class="modal-card modal-card-sm">
+      <div class="modal-head">
+        <h2 id="entry-title">Add receipt</h2>
+        <button class="btn btn-ghost btn-sm" id="entry-close">✕</button>
+      </div>
+      <input type="hidden" id="entry-train" />
+      <input type="hidden" id="entry-index" />
+      <label class="field"><span>Date</span><input id="entry-date" type="date" /></label>
+      <label class="field"><span>Received VG (₹)</span><input id="entry-vg" type="number" step="1" min="0" /></label>
+      <label class="field"><span>Received Mohit (₹)</span><input id="entry-mohit" type="number" step="1" min="0" /></label>
+      <label class="field"><span>Note (optional)</span><input id="entry-note" type="text" /></label>
+      <div class="modal-actions">
+        <button id="entry-delete" class="btn btn-danger btn-sm" hidden>Delete</button>
+        <div class="spacer"></div>
+        <button id="entry-save" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TRAIN MODAL ================= -->
+  <div id="train-modal" class="modal" hidden>
+    <div class="modal-card modal-card-sm">
+      <div class="modal-head">
+        <h2 id="train-modal-title">Add train</h2>
+        <button class="btn btn-ghost btn-sm" id="train-close">✕</button>
+      </div>
+      <input type="hidden" id="train-edit-id" />
+      <label class="field"><span>Train name / number</span><input id="train-name" type="text" placeholder="e.g. 12345/46" /></label>
+      <label class="field"><span>Total invested (₹)</span><input id="train-invested" type="number" min="0" step="1" /></label>
+      <label class="field"><span>Rent frequency</span>
+        <select id="train-freq">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="none">None / not started</option>
+        </select>
+      </label>
+      <label class="field"><span>Rent per period (₹)</span><input id="train-rate" type="number" min="0" step="1" /></label>
+      <div class="field-row">
+        <label class="field"><span>Schedule start</span><input id="train-start" type="date" /></label>
+        <label class="field"><span>Schedule end</span><input id="train-end" type="date" /></label>
+      </div>
+      <div class="modal-actions">
+        <button id="train-delete" class="btn btn-danger btn-sm" hidden>Delete train</button>
+        <div class="spacer"></div>
+        <button id="train-save" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= NOTES MODAL ================= -->
+  <div id="notes-modal" class="modal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>Edit partnership notes</h2>
+        <button class="btn btn-ghost btn-sm" id="notes-close">✕</button>
+      </div>
+      <p class="muted modal-intro">“Total Expense” is calculated automatically as the sum of all trains’ invested amounts and isn’t edited here.</p>
+      <div id="notes-rows"></div>
+      <button id="notes-add" class="btn btn-ghost btn-sm">+ Add note</button>
+      <div class="modal-actions"><div class="spacer"></div><button id="notes-save" class="btn btn-primary">Save</button></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

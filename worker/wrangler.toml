@@ -1,0 +1,19 @@
+name = "trainfundtrack-api"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# ---- Non-secret config. Edit these to match your setup. ----
+[vars]
+GH_OWNER = "yashleo22"
+GH_REPO = "trainfundtrack"
+GH_BRANCH = "main"
+GH_PATH = "data.json"
+# Lock this to your real site once deployed, e.g. "https://trains.example.com".
+# Use "*" only while testing.
+ALLOWED_ORIGIN = "*"
+
+# ---- Secrets are NOT stored here. Set them with:
+#   wrangler secret put GITHUB_TOKEN
+#   wrangler secret put ADMIN_PASSWORD
+#   wrangler secret put MOHIT_PASSWORD
+#   wrangler secret put SESSION_SECRET

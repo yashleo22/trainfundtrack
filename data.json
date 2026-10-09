@@ -574,6 +574,25 @@
         }
       ],
       "transactions": []
+    },
+    {
+      "id": "12407-08-2",
+      "name": "12407/08",
+      "investment": 1680635,
+      "schedule": {
+        "frequency": "weekly",
+        "rate": 72000,
+        "start": "2026-10-08",
+        "end": "2027-04-01"
+      },
+      "breakdown": [],
+      "transactions": [
+        {
+          "date": "2026-10-08",
+          "vg": 72000,
+          "mohit": 0
+        }
+      ]
     }
   ]
 }

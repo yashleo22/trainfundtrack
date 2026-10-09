@@ -393,6 +393,18 @@
           "vg": 18000,
           "mohit": 0,
           "note": "Actual 18 Sep 2026"
+        },
+        {
+          "date": "2026-09-30",
+          "vg": 18000,
+          "mohit": 0,
+          "note": "Actual 4 Oct 2026"
+        },
+        {
+          "date": "2026-10-07",
+          "vg": 18000,
+          "mohit": 0,
+          "note": "Actual 8 Oct 2026"
         }
       ]
     },

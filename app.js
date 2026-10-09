@@ -12,7 +12,7 @@
    • When EMPTY→ local-dev mode: uses CREDENTIALS below, reads
                  local data.json, "Save" just downloads a file.
    ============================================================ */
-const WORKER_URL = ""; // ← paste your Worker URL here after deploying
+const WORKER_URL = "https://trainfundtrack-api.trainfundtrack.workers.dev";
 
 /* ---- LOCAL-DEV credentials only (ignored when WORKER_URL is set).
    Blank on purpose: this repo is PUBLIC, so real passwords must never

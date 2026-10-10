@@ -537,45 +537,6 @@
       ]
     },
     {
-      "id": "12407-08",
-      "name": "12407/08",
-      "investment": 1680635,
-      "schedule": {
-        "frequency": "none",
-        "rate": 0,
-        "start": "2026-10-01",
-        "end": "2027-03-31"
-      },
-      "breakdown": [
-        {
-          "label": "L/f",
-          "amount": 1271667
-        },
-        {
-          "label": "23% GST",
-          "amount": 292483
-        },
-        {
-          "label": "Total",
-          "amount": 1564150
-        },
-        {
-          "label": "Deposit",
-          "amount": 1680635
-        },
-        {
-          "label": "Co. Extra",
-          "amount": 116485
-        },
-        {
-          "label": "Rent per trip",
-          "amount": null,
-          "note": "72,000 & 75,000"
-        }
-      ],
-      "transactions": []
-    },
-    {
       "id": "12407-08-2",
       "name": "12407/08",
       "investment": 1680635,

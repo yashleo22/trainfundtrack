@@ -205,6 +205,8 @@ h1, h2, h3 { margin: 0; font-weight: 650; }
 }
 .meter-fill { height: 100%; background: var(--series-1); border-radius: 20px 0 0 20px; transition: width .3s; }
 .meter-sub { font-size: 12px; color: var(--muted); margin-top: 5px; }
+.meter-sub.proj { margin-top: 3px; }
+.pos-txt { color: var(--good-text); }
 
 /* subsections */
 .sub-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -212,8 +214,11 @@ h1, h2, h3 { margin: 0; font-weight: 650; }
 .detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; align-items: start; }
 @media (max-width: 760px) { .detail-grid { grid-template-columns: 1fr; } }
 
-.sched-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
-table.sched { border-collapse: collapse; width: 100%; font-size: 13px; }
+.sched-wrap { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.sched-hint { font-size: 12px; margin: 0 0 6px; }
+table.sched { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 13px; }
+table.sched tbody tr.rowclick { cursor: pointer; }
+table.sched tbody tr.rowclick:active, table.sched tbody tr.rowclick:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 table.sched th, table.sched td { padding: 7px 12px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 table.sched th { position: sticky; top: 0; background: var(--surface-1); color: var(--muted); font-weight: 600;
   text-transform: uppercase; font-size: 11px; letter-spacing: .03em; border-bottom: 1px solid var(--border); text-align: right; }
@@ -223,7 +228,7 @@ table.sched td.diff-pos { color: var(--good-text); }
 table.sched td.diff-neg { color: var(--critical); }
 table.sched td.note { text-align: left; color: var(--muted); font-size: 12px; white-space: normal; }
 .row-edit { color: var(--accent); cursor: pointer; font-size: 12px; }
-.sched-scroll { max-height: 420px; overflow-y: auto; }
+.sched-scroll { max-height: 420px; overflow: auto; -webkit-overflow-scrolling: touch; }
 
 .breakdown { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--page); }
 .breakdown h3 { font-size: 12.5px; text-transform: uppercase; color: var(--muted); letter-spacing: .03em; margin-bottom: 8px; }

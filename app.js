@@ -66,6 +66,31 @@ const DAY = 86400000;
 function addDays(ms, n) { return ms + n * DAY; }
 function subDaysISO(iso, n) { return isoFromUTC(parseUTC(iso) - n * DAY); }
 
+/* Breakeven projection: at the realised average daily collection pace
+   (all-time received ÷ days since the first receipt), when will cumulative
+   received reach the investment? */
+function projectBreakeven(investment, receivedAll, firstDateISO) {
+  if (!(investment > 0)) return { status: "none" };
+  if (receivedAll >= investment) return { status: "recovered" };
+  if (!firstDateISO) return { status: "none" };
+  const days = Math.round((parseUTC(todayISO()) - parseUTC(firstDateISO)) / DAY) + 1;
+  const perDay = days > 0 ? receivedAll / days : 0;
+  if (!(perDay > 0)) return { status: "none" };
+  const daysLeft = Math.ceil((investment - receivedAll) / perDay);
+  return { status: "ok", perDay, daysLeft, date: isoFromUTC(parseUTC(todayISO()) + daysLeft * DAY) };
+}
+function breakevenLine(proj) {
+  if (proj.status === "recovered") return `<div class="meter-sub proj">Breakeven: <strong class="pos-txt">Recovered ✓</strong></div>`;
+  if (proj.status !== "ok") return `<div class="meter-sub proj muted">Projected breakeven: not enough data yet</div>`;
+  const horizon = proj.daysLeft >= 365 ? `~${(proj.daysLeft / 365).toFixed(1)} yr` : `~${Math.max(1, Math.round(proj.daysLeft / 30))} mo`;
+  return `<div class="meter-sub proj">Projected breakeven: <strong>${prettyMonthYear(proj.date)}</strong> (${horizon}) · at ${fmtMoney(proj.perDay)}/day avg pace</div>`;
+}
+function prettyMonthYear(iso) {
+  const [y, m] = iso.split("-").map(Number);
+  const mo = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${mo[m - 1]} ${y}`;
+}
+
 function prettyDate(iso) {
   const [y, m, d] = iso.split("-").map(Number);
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -138,9 +163,12 @@ function computeTrain(train, from, to) {
   const recoveryGap = train.investment - receivedAll; // toward breakeven (all-time)
   const recoveryPct = train.investment > 0 ? (receivedAll / train.investment) * 100 : 0;
 
+  let firstReceipt = null;
+  for (const t of train.transactions) if (txTotal(t) && (!firstReceipt || t.date < firstReceipt)) firstReceipt = t.date;
+
   return {
     expected, received, receivedAll, shortfall,
-    investment: train.investment, recoveryGap, recoveryPct,
+    investment: train.investment, recoveryGap, recoveryPct, firstReceipt,
     windowFrom: from || (sched[0] || train.schedule.start),
     windowTo: hi,
   };
@@ -379,6 +407,7 @@ function buildCardBody(body, train) {
       <div class="meter"><div class="meter-fill" style="width:${pct}%"></div></div>
       <div class="meter-sub">Received ${fmtMoney(c.receivedAll)} of ${fmtMoney(c.investment)} ·
         <strong>${fmtMoney(c.recoveryGap)}</strong> still to recover</div>
+      ${breakevenLine(projectBreakeven(c.investment, c.receivedAll, c.firstReceipt))}
     </div>`;
 
   const ownRange = `
@@ -411,10 +440,11 @@ function buildCardBody(body, train) {
   const editBtn = body.querySelector(".pt-edit");
   if (editBtn) editBtn.addEventListener("click", () => openTrainModal(train.id));
 
-  // wire row edit (admin edits both columns; guest edits Received Mohit)
+  // wire row edit (admin edits both columns; guest edits Received Mohit).
+  // Whole row is tappable so the action is reachable without scrolling on mobile.
   if (canEditAny()) {
-    body.querySelectorAll(".row-edit").forEach(el => {
-      el.addEventListener("click", () => openEntryModal(train.id, Number(el.dataset.idx), el.dataset.date));
+    body.querySelectorAll("tr.rowclick").forEach(tr => {
+      tr.addEventListener("click", () => openEntryModal(train.id, Number(tr.dataset.idx), tr.dataset.date));
     });
   }
 }
@@ -431,10 +461,9 @@ function renderScheduleTable(train, pt) {
     const vgCell = r.hasTx ? fmtNum(r.vg) : '<span class="muted">—</span>';
     const mohitCell = r.hasTx ? fmtNum(r.mohit) : '<span class="muted">—</span>';
     const showDiff = r.hasTx || r.expected;
-    const editCell = edit
-      ? `<td><span class="row-edit" data-idx="${r.txIndex}" data-date="${r.date}">${r.txIndex >= 0 ? "edit" : "add"}</span></td>`
-      : "";
-    return `<tr>
+    const editCell = edit ? `<td class="row-edit">${r.txIndex >= 0 ? "edit" : "add"}</td>` : "";
+    const trAttrs = edit ? ` class="rowclick" data-idx="${r.txIndex}" data-date="${r.date}"` : "";
+    return `<tr${trAttrs}>
       <td>${prettyDate(r.date)}</td>
       <td>${r.expected ? fmtNum(r.expected) : '<span class="muted">—</span>'}</td>
       <td>${vgCell}</td>
@@ -444,7 +473,8 @@ function renderScheduleTable(train, pt) {
       ${editCell}
     </tr>`;
   }).join("");
-  return `<div class="sched-wrap"><div class="sched-scroll"><table class="sched">
+  const hint = edit ? `<p class="sched-hint muted">Tap a row to add or edit a receipt. Table scrolls sideways on small screens.</p>` : "";
+  return hint + `<div class="sched-wrap"><div class="sched-scroll"><table class="sched">
     <thead><tr><th>Date</th><th>Expected</th><th>Received VG</th><th>Received Mohit</th><th>Diff</th><th>Note</th>${edit ? "<th></th>" : ""}</tr></thead>
     <tbody>${body}</tbody>
   </table></div></div>`;
@@ -464,10 +494,11 @@ function renderBreakdown(train) {
 function renderCumulative() {
   const trains = state.data.trains.filter(t => state.visible[t.id] !== false);
   const { from, to } = state.globalRange;
-  let invested = 0, received = 0, expected = 0, receivedAll = 0;
+  let invested = 0, received = 0, expected = 0, receivedAll = 0, firstReceipt = null;
   trains.forEach(t => {
     const c = computeTrain(t, from, to);
     invested += c.investment; received += c.received; expected += c.expected; receivedAll += c.receivedAll;
+    if (c.firstReceipt && (!firstReceipt || c.firstReceipt < firstReceipt)) firstReceipt = c.firstReceipt;
   });
   const shortfall = expected - received;
   const recoveryGap = invested - receivedAll;
@@ -537,6 +568,7 @@ function renderCumulative() {
         <div class="meter"><div class="meter-fill" style="width:${pct}%"></div></div>
         <div class="meter-sub">Received ${fmtMoney(receivedAll)} of ${fmtMoney(invested)} ·
           <strong>${fmtMoney(recoveryGap)}</strong> still to recover</div>
+        ${breakevenLine(projectBreakeven(invested, receivedAll, firstReceipt))}
       </div>
       <div class="breakdown" style="margin-top:16px">
         <h3 style="display:flex;justify-content:space-between;align-items:center">

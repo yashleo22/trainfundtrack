@@ -883,7 +883,7 @@ async function startApp() {
   // default visibility + first train open
   state.data.trains.forEach((t, i) => {
     if (state.visible[t.id] === undefined) state.visible[t.id] = true;
-    state.perTrain[t.id] = state.perTrain[t.id] || { open: i === 0, from: "", to: "" };
+    state.perTrain[t.id] = state.perTrain[t.id] || { open: false, from: "", to: "" };
   });
   state.globalRange = { from: "", to: "" };
   wireControls();

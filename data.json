@@ -26,7 +26,10 @@
         "frequency": "daily",
         "rate": 12000,
         "start": "2026-07-22",
-        "end": "2027-01-20"
+        "end": "2027-01-20",
+        "rateChanges": [
+          { "from": "2026-08-06", "rate": 9000 }
+        ]
       },
       "breakdown": [
         {

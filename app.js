@@ -447,6 +447,29 @@ function buildCardBody(body, train) {
       tr.addEventListener("click", () => openEntryModal(train.id, Number(tr.dataset.idx), tr.dataset.date));
     });
   }
+
+  // jump the schedule to today's row (4 earlier rows kept visible above it)
+  requestAnimationFrame(() => scrollScheduleToToday(body));
+}
+
+function scrollScheduleToToday(body) {
+  const scroller = body.querySelector(".sched-scroll");
+  if (!scroller) return;
+  const trs = [...scroller.querySelectorAll("tbody tr[data-date]")];
+  if (!trs.length) return;
+  const today = todayISO();
+  // today's row, else the most recent past row, else the first row
+  let target = trs.find(tr => tr.dataset.date === today);
+  if (!target) {
+    const past = trs.filter(tr => tr.dataset.date <= today);
+    target = past.length ? past[past.length - 1] : trs[0];
+  }
+  const idx = trs.indexOf(target);
+  const topRow = trs[Math.max(0, idx - 4)]; // 4 rows above → target is 5th in view
+  const thead = scroller.querySelector("thead");
+  const theadH = thead ? thead.getBoundingClientRect().height : 0;
+  const delta = topRow.getBoundingClientRect().top - scroller.getBoundingClientRect().top - theadH;
+  scroller.scrollTop += delta;
 }
 
 function renderScheduleTable(train, pt) {
@@ -462,8 +485,8 @@ function renderScheduleTable(train, pt) {
     const mohitCell = r.hasTx ? fmtNum(r.mohit) : '<span class="muted">—</span>';
     const showDiff = r.hasTx || r.expected;
     const editCell = edit ? `<td class="row-edit">${r.txIndex >= 0 ? "edit" : "add"}</td>` : "";
-    const trAttrs = edit ? ` class="rowclick" data-idx="${r.txIndex}" data-date="${r.date}"` : "";
-    return `<tr${trAttrs}>
+    const trAttrs = edit ? ` class="rowclick" data-idx="${r.txIndex}"` : "";
+    return `<tr data-date="${r.date}"${trAttrs}>
       <td>${prettyDate(r.date)}</td>
       <td>${r.expected ? fmtNum(r.expected) : '<span class="muted">—</span>'}</td>
       <td>${vgCell}</td>

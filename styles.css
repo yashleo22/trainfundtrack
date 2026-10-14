@@ -283,6 +283,17 @@ table.partnership tr.sep td { border-top: 1px solid var(--border); padding-top: 
 .note-row input { font-family: inherit; font-size: 14px; padding: 7px 9px;
   border: 1px solid var(--border); border-radius: 7px; background: var(--page); color: var(--text-primary); }
 .note-row .note-del { cursor: pointer; color: var(--critical); border: none; background: none; font-size: 16px; padding: 0 4px; }
+
+.day-lines-head, .day-line { display: grid; grid-template-columns: 1fr 1fr 1.2fr 26px; gap: 6px; align-items: center; }
+.day-lines-head { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; padding: 0 2px; margin-top: 2px; }
+#entry-lines { display: flex; flex-direction: column; gap: 6px; margin: 4px 0; }
+.day-line input { font-family: inherit; font-size: 14px; padding: 7px 8px; border: 1px solid var(--border);
+  border-radius: 7px; background: var(--page); color: var(--text-primary); min-width: 0; }
+.day-line input:disabled { opacity: .5; }
+.day-line .dl-del { border: none; background: none; color: var(--critical); cursor: pointer; font-size: 15px; padding: 0; }
+.day-line .dl-del:disabled { color: var(--muted); opacity: .4; cursor: default; }
+.day-total { font-size: 13px; color: var(--text-secondary); margin: 8px 0 2px; text-align: right; }
+
 .save-status { font-size: 12.5px; padding: 4px 10px; border-radius: 7px; white-space: nowrap; }
 .save-status.ok { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good-text); }
 .save-status.err { background: color-mix(in srgb, var(--critical) 16%, transparent); color: var(--critical); }

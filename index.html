@@ -93,21 +93,22 @@
     </footer>
   </div>
 
-  <!-- ================= ENTRY MODAL ================= -->
+  <!-- ================= DAY RECEIPTS MODAL ================= -->
   <div id="entry-modal" class="modal" hidden>
-    <div class="modal-card modal-card-sm">
+    <div class="modal-card">
       <div class="modal-head">
-        <h2 id="entry-title">Add receipt</h2>
+        <h2 id="entry-title">Receipts</h2>
         <button class="btn btn-ghost btn-sm" id="entry-close">✕</button>
       </div>
       <input type="hidden" id="entry-train" />
-      <input type="hidden" id="entry-index" />
+      <input type="hidden" id="entry-origdate" />
       <label class="field"><span>Date</span><input id="entry-date" type="date" /></label>
-      <label class="field"><span>Received VG (₹)</span><input id="entry-vg" type="number" step="1" min="0" /></label>
-      <label class="field"><span>Received Mohit (₹)</span><input id="entry-mohit" type="number" step="1" min="0" /></label>
-      <label class="field"><span>Note (optional)</span><input id="entry-note" type="text" /></label>
+      <p class="muted modal-intro">Add one line per receipt — the day's totals are summed automatically.</p>
+      <div class="day-lines-head"><span>Received VG</span><span>Received Mohit</span><span>Note</span><span></span></div>
+      <div id="entry-lines"></div>
+      <button id="entry-add-line" class="btn btn-ghost btn-sm">+ Add receipt line</button>
+      <div class="day-total" id="entry-total"></div>
       <div class="modal-actions">
-        <button id="entry-delete" class="btn btn-danger btn-sm" hidden>Delete</button>
         <div class="spacer"></div>
         <button id="entry-save" class="btn btn-primary">Save</button>
       </div>

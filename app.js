@@ -181,7 +181,7 @@ function detailRows(train, from, to) {
   train.transactions.forEach((t, i) => {
     vgByDate[t.date] = (vgByDate[t.date] || 0) + (Number(t.vg) || 0);
     mohitByDate[t.date] = (mohitByDate[t.date] || 0) + (Number(t.mohit) || 0);
-    if (t.note) noteByDate[t.date] = t.note;
+    if (t.note) noteByDate[t.date] = noteByDate[t.date] ? noteByDate[t.date] + " · " + t.note : t.note;
     idxByDate[t.date] = i; // last index on that date (for edit)
   });
   const allDates = new Set([...sched, ...Object.keys(idxByDate)]);
@@ -436,7 +436,7 @@ function buildCardBody(body, train) {
   body.querySelector(".pt-sync").addEventListener("click", () => { pt.from = state.globalRange.from; pt.to = state.globalRange.to; refresh(); });
   body.querySelector(".pt-clear").addEventListener("click", () => { pt.from = ""; pt.to = ""; refresh(); });
   const addBtn = body.querySelector(".pt-add");
-  if (addBtn) addBtn.addEventListener("click", () => openEntryModal(train.id, -1));
+  if (addBtn) addBtn.addEventListener("click", () => openDayModal(train.id, todayISO()));
   const editBtn = body.querySelector(".pt-edit");
   if (editBtn) editBtn.addEventListener("click", () => openTrainModal(train.id));
 
@@ -444,7 +444,7 @@ function buildCardBody(body, train) {
   // Whole row is tappable so the action is reachable without scrolling on mobile.
   if (canEditAny()) {
     body.querySelectorAll("tr.rowclick").forEach(tr => {
-      tr.addEventListener("click", () => openEntryModal(train.id, Number(tr.dataset.idx), tr.dataset.date));
+      tr.addEventListener("click", () => openDayModal(train.id, tr.dataset.date));
     });
   }
 
@@ -485,7 +485,7 @@ function renderScheduleTable(train, pt) {
     const mohitCell = r.hasTx ? fmtNum(r.mohit) : '<span class="muted">—</span>';
     const showDiff = r.hasTx || r.expected;
     const editCell = edit ? `<td class="row-edit">${r.txIndex >= 0 ? "edit" : "add"}</td>` : "";
-    const trAttrs = edit ? ` class="rowclick" data-idx="${r.txIndex}"` : "";
+    const trAttrs = edit ? ` class="rowclick"` : "";
     return `<tr data-date="${r.date}"${trAttrs}>
       <td>${prettyDate(r.date)}</td>
       <td>${r.expected ? fmtNum(r.expected) : '<span class="muted">—</span>'}</td>
@@ -623,62 +623,66 @@ function renderCumulative() {
 }
 
 /* ============================================================
-   ENTRY MODAL (admin)
+   DAY RECEIPTS MODAL — multiple receipts per day, auto-summed
    ============================================================ */
-function openEntryModal(trainId, txIndex, presetDate) {
-  const modal = $("#entry-modal");
-  $("#entry-train").value = trainId;
-  $("#entry-index").value = txIndex;
+function openDayModal(trainId, date) {
   const train = state.data.trains.find(t => t.id === trainId);
-  if (txIndex >= 0) {
-    const t = train.transactions[txIndex];
-    $("#entry-title").textContent = "Edit receipt — " + train.name;
-    $("#entry-date").value = t.date;
-    $("#entry-vg").value = t.vg || 0;
-    $("#entry-mohit").value = t.mohit || 0;
-    $("#entry-note").value = t.note || "";
-    $("#entry-delete").hidden = !isAdmin();
-  } else {
-    $("#entry-title").textContent = "Add receipt — " + train.name;
-    $("#entry-date").value = presetDate || todayISO();
-    $("#entry-vg").value = "";
-    $("#entry-mohit").value = "";
-    $("#entry-note").value = "";
-    $("#entry-delete").hidden = true;
-  }
-  // guest can only edit the Received Mohit column
-  const vgLocked = !canEditVG();
-  $("#entry-vg").disabled = vgLocked;
-  $("#entry-note").disabled = !isAdmin();
-  modal.hidden = false;
+  $("#entry-train").value = trainId;
+  $("#entry-origdate").value = date;
+  $("#entry-date").value = date;
+  $("#entry-title").textContent = "Receipts — " + train.name;
+  const lines = train.transactions.filter(t => t.date === date);
+  const wrap = $("#entry-lines");
+  wrap.innerHTML = "";
+  if (lines.length) lines.forEach(l => wrap.appendChild(dayLineEl(l.vg, l.mohit, l.note)));
+  else wrap.appendChild(dayLineEl("", "", ""));
+  updateDayTotal();
+  $("#entry-modal").hidden = false;
 }
 function closeEntryModal() { $("#entry-modal").hidden = true; }
 
-function saveEntry() {
-  const trainId = $("#entry-train").value;
-  const idx = Number($("#entry-index").value);
-  const date = $("#entry-date").value;
-  const vg = Number($("#entry-vg").value) || 0;
-  const mohit = Number($("#entry-mohit").value) || 0;
-  const note = $("#entry-note").value.trim();
-  if (!date) { alert("Please enter a valid date."); return; }
-  const train = state.data.trains.find(t => t.id === trainId);
-  const entry = { date, vg, mohit };
-  if (note) entry.note = note;
-  if (idx >= 0) train.transactions[idx] = entry;
-  else train.transactions.push(entry);
-  train.transactions.sort((a, b) => a.date.localeCompare(b.date));
-  markDirty();
-  closeEntryModal();
-  rebuildOpenCards();
-  renderCumulative();
+function dayLineEl(vg, mohit, note) {
+  const vgLocked = !canEditVG();
+  const v = x => (x === "" || x == null) ? "" : x;
+  const row = document.createElement("div");
+  row.className = "day-line";
+  row.innerHTML = `
+    <input class="dl-vg" type="number" min="0" step="1" inputmode="numeric" placeholder="VG" value="${v(vg)}" ${vgLocked ? "disabled" : ""} />
+    <input class="dl-mohit" type="number" min="0" step="1" inputmode="numeric" placeholder="Mohit" value="${v(mohit)}" />
+    <input class="dl-note" type="text" placeholder="note" value="${String(note || "").replace(/"/g, "&quot;")}" ${isAdmin() ? "" : "disabled"} />
+    <button class="dl-del" title="Remove line" ${vgLocked && Number(vg) > 0 ? "disabled" : ""}>✕</button>`;
+  row.querySelector(".dl-del").addEventListener("click", () => { row.remove(); updateDayTotal(); });
+  row.querySelectorAll("input").forEach(i => i.addEventListener("input", updateDayTotal));
+  return row;
 }
-function deleteEntry() {
+function updateDayTotal() {
+  let vg = 0, mohit = 0;
+  $$("#entry-lines .day-line").forEach(r => {
+    vg += Number(r.querySelector(".dl-vg").value) || 0;
+    mohit += Number(r.querySelector(".dl-mohit").value) || 0;
+  });
+  $("#entry-total").innerHTML = `Day total — VG <strong>${fmtMoney(vg)}</strong> · Mohit <strong>${fmtMoney(mohit)}</strong>`;
+}
+function saveDay() {
   const trainId = $("#entry-train").value;
-  const idx = Number($("#entry-index").value);
-  if (idx < 0) return;
+  const origDate = $("#entry-origdate").value;
+  const date = $("#entry-date").value;
+  if (!date) { alert("Please enter a date."); return; }
   const train = state.data.trains.find(t => t.id === trainId);
-  train.transactions.splice(idx, 1);
+  const newLines = [];
+  $$("#entry-lines .day-line").forEach(r => {
+    const vg = Number(r.querySelector(".dl-vg").value) || 0;
+    const mohit = Number(r.querySelector(".dl-mohit").value) || 0;
+    const note = r.querySelector(".dl-note").value.trim();
+    if (vg === 0 && mohit === 0 && !note) return;  // skip blank lines
+    const o = { date, vg, mohit };
+    if (note) o.note = note;
+    newLines.push(o);
+  });
+  // replace all receipts that were on the original date with the edited set
+  train.transactions = train.transactions.filter(t => t.date !== origDate);
+  train.transactions.push(...newLines);
+  train.transactions.sort((a, b) => a.date.localeCompare(b.date));
   markDirty();
   closeEntryModal();
   rebuildOpenCards();
@@ -878,8 +882,11 @@ function wireControls() {
 
   // entry modal
   $("#entry-close").addEventListener("click", closeEntryModal);
-  $("#entry-save").addEventListener("click", saveEntry);
-  $("#entry-delete").addEventListener("click", deleteEntry);
+  $("#entry-save").addEventListener("click", saveDay);
+  $("#entry-add-line").addEventListener("click", () => {
+    $("#entry-lines").appendChild(dayLineEl("", "", ""));
+    updateDayTotal();
+  });
   $("#entry-modal").addEventListener("click", e => { if (e.target.id === "entry-modal") closeEntryModal(); });
 
   window.addEventListener("beforeunload", e => {

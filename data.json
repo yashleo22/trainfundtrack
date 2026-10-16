@@ -6,7 +6,7 @@
       {
         "key": "yp",
         "label": "Paid VG",
-        "amount": 2980635
+        "amount": 3496862
       },
       {
         "key": "m",
@@ -15,7 +15,9 @@
       }
     ],
     "financeNotes": [],
-    "rowNotes": {}
+    "rowNotes": {
+      "paidVG": "2,980,635+94,589+421,638"
+    }
   },
   "trains": [
     {

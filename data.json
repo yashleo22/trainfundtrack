@@ -1,7 +1,7 @@
 {
   "meta": {
     "currency": "₹",
-    "updated": "2026-10-16",
+    "updated": "2026-10-17",
     "partners": [
       {
         "key": "yp",
@@ -621,6 +621,19 @@
           "mohit": 0
         }
       ]
+    },
+    {
+      "id": "15011-12",
+      "name": "15011/12",
+      "investment": 916227,
+      "schedule": {
+        "frequency": "daily",
+        "rate": 6500,
+        "start": "2026-10-22",
+        "end": "2027-04-21"
+      },
+      "breakdown": [],
+      "transactions": []
     }
   ]
 }

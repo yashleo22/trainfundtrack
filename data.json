@@ -1,7 +1,7 @@
 {
   "meta": {
     "currency": "₹",
-    "updated": "2026-10-15",
+    "updated": "2026-10-16",
     "partners": [
       {
         "key": "yp",
@@ -435,6 +435,12 @@
           "vg": 18000,
           "mohit": 0,
           "note": "Actual 8 Oct 2026"
+        },
+        {
+          "date": "2026-10-14",
+          "vg": 18000,
+          "mohit": 0,
+          "note": "Actual 16 Oct"
         }
       ]
     },

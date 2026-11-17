@@ -18,7 +18,13 @@
     "rowNotes": {
       "paidVG": "300000+500000+150000-50000+500000+600000+980635+94589+421638",
       "paidMohit": "1178877+600000+2218+400000+400000"
-    }
+    },
+    "closureNotes": [
+      {
+        "text": "One week price for the 5 Nov train to be reversed by Government",
+        "date": "2026-11-17"
+      }
+    ]
   },
   "trains": [
     {
@@ -977,7 +983,10 @@
         "frequency": "weekly",
         "rate": 72000,
         "start": "2026-10-08",
-        "end": "2027-04-01"
+        "end": "2027-04-01",
+        "rateOverrides": {
+          "2026-11-05": 0
+        }
       },
       "breakdown": [],
       "transactions": [

@@ -330,12 +330,71 @@ function markDirty() {
   $("#dirty-flag").hidden = false;
 }
 
+function escHtml(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function renderAll() {
   renderTrainFilter();
   renderTrainList();
   renderCumulative();
+  renderClosure();
   renderRangeNote();
   $("#data-updated").textContent = prettyDate(state.data.meta.updated);
+}
+
+/* ============================================================
+   CLOSURE NOTES — free-form reminders to settle at term closure
+   ============================================================ */
+function renderClosure() {
+  const admin = isAdmin();
+  const notes = state.data.meta.closureNotes || (state.data.meta.closureNotes = []);
+  const rows = notes.map((n, i) => {
+    const dateBit = n.date ? `<span class="cl-date muted">${prettyDate(n.date)}</span>` : "";
+    if (admin) {
+      return `<div class="closure-row" data-i="${i}">
+        <input class="cl-text" data-i="${i}" value="${escHtml(n.text)}" placeholder="Describe something to settle at closure…" />
+        ${dateBit}
+        <button class="cl-del" data-i="${i}" title="Remove">✕</button>
+      </div>`;
+    }
+    return `<div class="closure-row"><span class="cl-text-ro">${escHtml(n.text)}</span>${dateBit}</div>`;
+  }).join("");
+  const empty = notes.length ? "" : `<p class="muted" style="margin:4px 0 0">No closure notes yet.</p>`;
+
+  $("#closure").innerHTML = `
+    <div class="cum-card">
+      <h2 style="display:flex;justify-content:space-between;align-items:center">
+        <span>Closure &amp; settlement notes</span>
+        ${admin ? '<button id="cl-add" class="btn btn-ghost btn-sm">+ Add note</button>' : ""}
+      </h2>
+      <div class="cum-sub">Things to cater for when a train's term comes to a close — settled manually, system updated later.</div>
+      <div id="closure-rows">${rows}${empty}</div>
+    </div>`;
+
+  if (admin) {
+    $("#cl-add").addEventListener("click", () => {
+      state.data.meta.closureNotes.push({ text: "", date: todayISO() });
+      markDirty();
+      renderClosure();
+      const inputs = $$("#closure-rows .cl-text");
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+    $$("#closure-rows .cl-text").forEach(inp => {
+      inp.addEventListener("change", () => {
+        const i = Number(inp.dataset.i);
+        if (state.data.meta.closureNotes[i]) { state.data.meta.closureNotes[i].text = inp.value; markDirty(); }
+      });
+    });
+    $$("#closure-rows .cl-del").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = Number(btn.dataset.i);
+        state.data.meta.closureNotes.splice(i, 1);
+        markDirty();
+        renderClosure();
+      });
+    });
+  }
 }
 
 function renderRangeNote() {

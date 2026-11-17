@@ -278,6 +278,16 @@ table.partnership tr.sep td { border-top: 1px solid var(--border); padding-top: 
 .cum-card h2 { font-size: 16px; margin-bottom: 4px; }
 .cum-sub { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
 
+/* ---------- closure notes ---------- */
+#closure-rows { display: flex; flex-direction: column; gap: 8px; }
+.closure-row { display: flex; align-items: center; gap: 10px; }
+.closure-row .cl-text { flex: 1; font-family: inherit; font-size: 14px; padding: 8px 10px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--page); color: var(--text-primary); }
+.closure-row .cl-text:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.closure-row .cl-text-ro { flex: 1; font-size: 14px; }
+.cl-date { font-size: 12px; white-space: nowrap; }
+.cl-del { border: none; background: none; color: var(--critical); cursor: pointer; font-size: 15px; padding: 0 4px; }
+
 /* ---------- modal ---------- */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
 .modal-card { background: var(--surface-1); border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; max-width: 460px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }

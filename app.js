@@ -113,10 +113,14 @@ function fmtNum(n) { return Math.round(n).toLocaleString("en-IN"); }
    ============================================================ */
 function txTotal(t) { return (Number(t.vg) || 0) + (Number(t.mohit) || 0); }
 
-/* Rate that applies on a given date: base schedule.rate, overridden by any
-   rateChanges entry whose `from` date is on/before that date (latest wins). */
+/* Rate that applies on a given date:
+   1. base schedule.rate
+   2. overridden by any rateChanges entry whose `from` is on/before that date (latest wins)
+   3. finally, a single-day rateOverrides[date] wins outright (e.g. Diwali tariff). */
 function rateOn(train, isoDate) {
   const sch = train.schedule || {};
+  const ov = sch.rateOverrides || {};
+  if (Object.prototype.hasOwnProperty.call(ov, isoDate)) return Number(ov[isoDate]) || 0;
   let rate = Number(sch.rate) || 0;
   const changes = (sch.rateChanges || []).slice().sort((a, b) => a.from.localeCompare(b.from));
   for (const c of changes) if (isoDate >= c.from) rate = Number(c.rate) || 0;
@@ -742,7 +746,7 @@ function saveTrain() {
     const t = state.data.trains.find(x => x.id === id);
     t.name = name;
     t.investment = investment;
-    t.schedule = { frequency, rate, start: start || t.schedule.start, end: end || t.schedule.end, rateChanges: t.schedule.rateChanges || [] };
+    t.schedule = { frequency, rate, start: start || t.schedule.start, end: end || t.schedule.end, rateChanges: t.schedule.rateChanges || [], rateOverrides: t.schedule.rateOverrides || {} };
   } else {
     const newId = slugify(name);
     state.data.trains.push({

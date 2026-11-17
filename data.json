@@ -35,7 +35,10 @@
             "from": "2026-08-06",
             "rate": 9000
           }
-        ]
+        ],
+        "rateOverrides": {
+          "2026-11-08": 4000
+        }
       },
       "breakdown": [
         {
@@ -531,7 +534,10 @@
         "frequency": "weekly",
         "rate": 18000,
         "start": "2026-07-22",
-        "end": "2027-01-13"
+        "end": "2027-01-13",
+        "rateOverrides": {
+          "2026-11-11": 9000
+        }
       },
       "breakdown": [
         {
@@ -664,7 +670,10 @@
         "frequency": "daily",
         "rate": 10000,
         "start": "2026-09-19",
-        "end": "2027-03-20"
+        "end": "2027-03-20",
+        "rateOverrides": {
+          "2026-11-08": 5000
+        }
       },
       "breakdown": [
         {
@@ -980,7 +989,10 @@
         "frequency": "daily",
         "rate": 6500,
         "start": "2026-10-22",
-        "end": "2027-04-21"
+        "end": "2027-04-21",
+        "rateOverrides": {
+          "2026-11-08": 3000
+        }
       },
       "breakdown": [],
       "transactions": []

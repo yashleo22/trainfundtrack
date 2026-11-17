@@ -85,6 +85,27 @@ function breakevenLine(proj) {
   const horizon = proj.daysLeft >= 365 ? `~${(proj.daysLeft / 365).toFixed(1)} yr` : `~${Math.max(1, Math.round(proj.daysLeft / 30))} mo`;
   return `<div class="meter-sub proj">Projected breakeven: <strong>${prettyMonthYear(proj.date)}</strong> (${horizon}) · at ${fmtMoney(proj.perDay)}/day avg pace</div>`;
 }
+/* Full-term outlook panel: what we started expecting — invest X, collect Y by
+   lease end, for profit Z (N%). endLabel is shown when a single end date applies. */
+function termOutlook(invested, fullTermExpected, endISO) {
+  const profit = fullTermExpected - invested;
+  const roi = invested > 0 ? (profit / invested) * 100 : 0;
+  const cls = profit >= 0 ? "pos" : "neg";
+  const sign = profit >= 0 ? "+" : "";
+  const endBit = endISO ? ` by ${prettyMonthYear(endISO)}` : "";
+  return `
+    <div class="outlook">
+      <div class="outlook-title">Full-term outlook${endBit} <span class="muted">(if all scheduled rent is collected)</span></div>
+      <div class="outlook-row">
+        <div class="ol-item"><span class="ol-label">Invested</span><span class="ol-val">${fmtMoney(invested)}</span></div>
+        <div class="ol-arrow">→</div>
+        <div class="ol-item"><span class="ol-label">Total expected revenue</span><span class="ol-val">${fmtMoney(fullTermExpected)}</span></div>
+        <div class="ol-arrow">=</div>
+        <div class="ol-item"><span class="ol-label">Projected ${profit >= 0 ? "profit" : "loss"}</span><span class="ol-val ${cls}">${sign}${fmtMoney(profit)} <span class="ol-roi">(${sign}${roi.toFixed(1)}%)</span></span></div>
+      </div>
+    </div>`;
+}
+
 function prettyMonthYear(iso) {
   const [y, m] = iso.split("-").map(Number);
   const mo = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -155,6 +176,10 @@ function computeTrain(train, from, to) {
   let expected = 0;
   for (const d of sched) if (d >= lo && d <= hi) expected += rateOn(train, d);
 
+  // full-term expected = all scheduled rent across the whole lease (ignores window & today)
+  let fullTermExpected = 0;
+  for (const d of sched) fullTermExpected += rateOn(train, d);
+
   // received within window (VG + Mohit)
   let received = 0;
   for (const t of train.transactions) if (t.date >= lo && t.date <= hi) received += txTotal(t);
@@ -170,9 +195,14 @@ function computeTrain(train, from, to) {
   let firstReceipt = null;
   for (const t of train.transactions) if (txTotal(t) && (!firstReceipt || t.date < firstReceipt)) firstReceipt = t.date;
 
+  const termProfit = fullTermExpected - train.investment;
+  const termRoiPct = train.investment > 0 ? (termProfit / train.investment) * 100 : 0;
+
   return {
     expected, received, receivedAll, shortfall,
     investment: train.investment, recoveryGap, recoveryPct, firstReceipt,
+    fullTermExpected, termProfit, termRoiPct,
+    scheduleEnd: train.schedule.end,
     windowFrom: from || (sched[0] || train.schedule.start),
     windowTo: hi,
   };
@@ -398,8 +428,10 @@ function buildCardBody(body, train) {
       ${kpiTile("Total invested", fmtMoney(c.investment))}
       ${kpiTile("Received (VG+Mohit, range)", fmtMoney(c.received))}
       ${kpiTile("Expected till date (range)", fmtMoney(c.expected))}
+      ${kpiTile("Total expected (full term)", fmtMoney(c.fullTermExpected), "", "all scheduled rent, start → end")}
       ${kpiTile(shortLabel, fmtMoney(Math.abs(c.shortfall)), shortClass)}
-    </div>`;
+    </div>
+    ${termOutlook(c.investment, c.fullTermExpected, c.scheduleEnd)}`;
 
   const pct = Math.min(100, Math.max(0, c.recoveryPct));
   const meter = `
@@ -521,10 +553,12 @@ function renderBreakdown(train) {
 function renderCumulative() {
   const trains = state.data.trains.filter(t => state.visible[t.id] !== false);
   const { from, to } = state.globalRange;
-  let invested = 0, received = 0, expected = 0, receivedAll = 0, firstReceipt = null;
+  let invested = 0, received = 0, expected = 0, receivedAll = 0, firstReceipt = null, fullTermExpected = 0, lastEnd = "";
   trains.forEach(t => {
     const c = computeTrain(t, from, to);
     invested += c.investment; received += c.received; expected += c.expected; receivedAll += c.receivedAll;
+    fullTermExpected += c.fullTermExpected;
+    if (c.scheduleEnd && c.scheduleEnd > lastEnd) lastEnd = c.scheduleEnd;
     if (c.firstReceipt && (!firstReceipt || c.firstReceipt < firstReceipt)) firstReceipt = c.firstReceipt;
   });
   const shortfall = expected - received;
@@ -585,8 +619,10 @@ function renderCumulative() {
         ${kpiTile("Total invested", fmtMoney(invested))}
         ${kpiTile("Total received (range)", fmtMoney(received))}
         ${kpiTile("Total expected till date (range)", fmtMoney(expected))}
+        ${kpiTile("Total expected (full term)", fmtMoney(fullTermExpected), "", "all scheduled rent, start → end")}
         ${kpiTile(shortfall >= 0 ? "Total pending vs expected" : "Collected above expected", fmtMoney(Math.abs(shortfall)), shortClass)}
       </div>
+      ${termOutlook(invested, fullTermExpected, lastEnd)}
       <div class="meter-wrap">
         <div class="meter-top">
           <span>Overall recovery toward breakeven <span class="muted">(all-time received vs invested)</span></span>
